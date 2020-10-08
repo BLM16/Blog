@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+{{ super() }}
+    <div class="container">
+        <div class="card mx-auto" style="width: 60%; margin-top: 20vh;">
+            <div class="card-body">
+                <h1 class="card-title">Register</h1>
+                <hr />
+                <form method="POST">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            </div>
+                            <input type="text" placeholder="Username" class="form-control" id="username" name="username">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-at" style="padding-top: 2px;"></i></span>
+                            </div>
+                            <input type="email" placeholder="example@domain.com" class="form-control" id="email" name="email">
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            </div>
+                            <input type="password" placeholder="●●●●●●●●●●●●" class="form-control" id="password" name="password">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            </div>
+                            <input type="password" placeholder="●●●●●●●●●●●● (Confirm)" class="form-control" id="passwordConf" name="passwordConf">
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-outline-primary">Register</button>
+                        <a class="btn text-primary" href="{{ url_for('Login') }}">Already have an account? Login.</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

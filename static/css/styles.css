@@ -9,3 +9,9 @@ body {
     width: 100%;
     height: 100%;
 }
+
+.input-group-text {
+    width: 42px;
+    display: flex;
+    justify-content: center;
+}

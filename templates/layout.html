@@ -9,6 +9,7 @@
 
     {% block styles %}
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'css/styles.css') }}">
     {% endblock %}
 {% endblock %}
@@ -20,22 +21,27 @@
 {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('Main') }}">Blog</a>
+            <a class="navbar-brand" href="{{ url_for('Main') }}">
+                <img src="{{ url_for('static', filename = 'images/favicons/favicon-32x32.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
+                Blog
+            </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
+                <ul class="nav navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('Main') }}">Home</a>
+                        <a href="{{ url_for('Main') }}" class="nav-link">Home</a>
                     </li>
                 </ul>
-                <ul class="navbar-nav navbar-right">
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Test1</a>
+                        <a class="nav-link" href="{{ url_for('Login') }}">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Test1</a>
+                        <a class="nav-link" href="{{ url_for('Register') }}">Register</a>
                     </li>
                 </ul>
             </div>
