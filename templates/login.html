@@ -9,6 +9,13 @@
                 <h1 class="card-title">Login</h1>
                 <hr />
                 <form method="POST">
+                    {% if message %}
+                        <div class="alert alert-danger alert-dismissable">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>{{ message }}</span>
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        </div>
+                    {% endif %}
                     <div class="form-group">
                         <div class="input-group">
                             <div class="input-group-prepend">

@@ -1,14 +1,18 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, request, session
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import text, select
 from datetime import date
+import re
 
 # Configure app
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SECRET_KEY'] = '77916e7166d54cf2bdc184058c4bf3d6'
 
 # Configure database
 db = SQLAlchemy(app)
+engine = db.engine
 
 # Configure bootstrap
 Bootstrap(app)
@@ -20,6 +24,7 @@ class User(db.Model):
     username = db.Column(db.String(20), nullable = False, unique = True)
     email = db.Column(db.String(50), nullable = False, unique = True)
     password = db.Column(db.String, nullable = False)
+    #about = db.Colum(db.Text)
 
     # References the Post class
     # Allows posts to access the User that created it
@@ -44,11 +49,11 @@ class Post(db.Model):
     # Foreign key references the author's User's id
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
 
-    def __init__(self, author, title, content):
-        self.author = author
+    def __init__(self, author_id, title, content):
         self.date_created = str(date.today())
         self.title = title
         self.content = content
+        self.author_id = author_id
 
     def __repr__(self):
         return f'Post({self.author}, {self.date_created}, {self.title})'
@@ -61,11 +66,148 @@ def Main():
 
 @app.route('/login')
 def Login():
-    return render_template("login.html")
+    message = request.args.get('message')
+    return render_template("login.html", message = message)
 
 @app.route('/register')
 def Register():
-    return render_template("register.html")
+    message = request.args.get('message')
+    return render_template("register.html", message = message)
+
+@app.route('/profile')
+def Own_Profile():
+    """Route for viewing own profile"""
+
+    # Display profile if user is logged in, else prompt them to login
+    if not 'user_id' in session:
+        return redirect(url_for('Login', message = "You must be logged in to view your profile."))
+    else:
+        with engine.connect() as con:
+            # Create and execute query
+            try:
+                statement = text("SELECT * FROM user WHERE (id = :id)")
+                user = con.execute(statement, id = session['user_id']).fetchall()[0]
+            except:
+                # Change this into an error page of some sort
+                return redirect(url_for('Main'))
+
+            try:
+                statement = text("SELECT * FROM post WHERE (author_id = :id) ORDER BY id DESC")
+                posts = con.execute(statement, id = session['user_id']).fetchall()
+            except:
+                # Turn this into an error page of some sort
+                return redirect(url_for('Main'))
+
+        return render_template("profile.html", user = user, posts = posts, editable = True)
+
+@app.route('/profile/<username>')
+def User_Profile(username):
+    """Route for viewing other's profiles"""
+
+    with engine.connect() as con:
+        # Create and execute query
+        try:
+            statement = text("SELECT * FROM user WHERE (username = :username)")
+            user = con.execute(statement, username = username).fetchall()[0]
+        except:
+            # Change this into an error page of some sort
+            return redirect(url_for('Main'))
+
+        try:
+            statement = text("SELECT * FROM post WHERE (author_id = :id) ORDER BY id DESC")
+            posts = con.execute(statement, id = user.id).fetchall()
+        except:
+            # Change this into an error page of some sort
+            return redirect(url_for('Main'))
+
+        if 'user_id' in session:
+            if user.id == session['user_id']:
+                return redirect(url_for('Own_Profile'))
+
+    return render_template("profile.html", user = user, posts = posts, editable = False)
+
+@app.route('/post/<int:post_id>')
+def View_Post(post_id):
+    pass
+
+@app.route('/logout')
+def Logout():
+    # Delete the user's session
+    session.pop('user_id')
+
+    return redirect(url_for('Login'))
+
+# Configure App routes with HTTP methods
+@app.route('/login', methods = ['POST'])
+def Login_User():
+    """Checks credentials and logs user in"""
+
+    # Check if both fields are filled out
+    if not (request.form['email'] and request.form['password']):
+        return redirect(url_for('Login', message = "Invalid email or password"))
+    else:
+        # Connect to DB
+        with engine.connect() as con:
+            # Check if user exists with given credentials
+            statement = text("SELECT user.id FROM user WHERE (email = :email AND password = :password)")
+            user_id = con.execute(statement, email = request.form['email'], password = request.form['password']).scalar()
+
+            if user_id:
+                session['user_id'] = user_id # Create a user_id session to store login
+                return redirect(url_for('Own_Profile')) # Redirect to user's profile
+            else:
+                return redirect(url_for('Login', message = "Invalid email or password"))
+
+@app.route('/register', methods = ['POST'])
+def Register_User():
+    """Validates register form data and saves it to the database"""
+
+    # Check if the fields are filled out
+    if not (request.form['username'] and request.form['email'] and request.form['password'] and request.form['passwordConf']):
+        return redirect(url_for('Register', message = "Please fill out all the fields"))
+    else:
+        # Ensure passwords match
+        if request.form['password'] != request.form['passwordConf']:
+            return redirect(url_for('Register', message = "Passwords do not match"))
+
+        # Ensure name is only _, a-z, A-Z, 0-9, and space
+        if not re.search(r'^[\w_ ]+$', request.form['username']):
+            return redirect(url_for('Register', message = "Username can only contain _, a-z, A-Z, 0-9 and spaces."))
+        
+        # Ensure a valid email
+        if not re.search(r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$', request.form['email']):
+            return redirect(url_for('Register', message = "Invalid email"))
+
+        # Connect to DB
+        with engine.connect() as con:
+            # Check if username is taken
+            statement = text("SELECT COUNT(1) FROM user WHERE (username = :username)")
+            result = con.execute(statement, username = request.form['username']).scalar()
+
+            if result > 0:
+                return redirect(url_for('Register', message = "Username is already taken"))
+
+            # Check if email is taken
+            statement = text("SELECT COUNT(1) FROM user WHERE (email = :email)")
+            result = con.execute(statement, email = request.form['email']).scalar()
+
+            if result > 0:
+                return redirect(url_for('Register', message = "Email is already taken"))
+
+            # Create new user and add to the database
+            new_user = User(request.form['username'], request.form['email'], request.form['password'])
+            db.session.add(new_user)
+            db.session.commit()
+
+            # Get the new user's ID to log them in
+            statement = text("SELECT id FROM user WHERE (username = :username)")
+            result = con.execute(statement, username = request.form['username']).scalar()
+
+            # Log the new user in with a session
+            session['user_id'] = result
+
+            # Redirect to the new user's profile
+            return redirect(url_for('Own_Profile'))
 
 # Run the code in debug mode
 # Remove debug in production

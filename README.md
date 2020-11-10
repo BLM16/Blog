@@ -6,26 +6,32 @@ Blog
 
 Author: [Bradley Myers](https://github.com/BLM16/)
 
-> Date created: 07-10-2020 | Last updated: 08-11-2020
+> Date created: 07-10-2020 | Last updated: 09-11-2020
 
 ## Setup
 
 **Make sure you have python (3.9.x) installed, and added to PATH.**
 
-To install the requirements, run the following commands in a terminal (Windows):
+To install the requirements, run the following command in a terminal (Windows):
 
 ```bat
-pip install flask
-pip install flask_bootstrap
-pip install flask_sqlalchemy
+pip install requirements.txt
 ```
 
-To set up the database with the required tables, run the following commands in a terminal (Windows). **Note: python might be `py` or some other command depending on your version(s) installed.**
+To set up the database with the required tables, run the following commands in a terminal (Windows) in the project's directory. **Note: python might be `py` or some other command depending on your version(s) installed.**
 
-```bat
+```py
 python
 from App import db
 db.create_all()
+```
+
+Set your SECRET_KEY in [App.py](./App.py). To get a secret key, run the following commands in a terminal (Windows). **Note: python might be `py` or some other command depending on your version(s) installed.**
+
+```py
+python
+import uuid
+uuid.uuid4().hex
 ```
 
 ## Licence

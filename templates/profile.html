@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+{{ super() }}
+    <div class="container" style="padding-top: 5vh;">
+        <div class="row">
+            <div class="card sticky-top" style="width: 35%; margin-right: 2vw; height: fit-content; top: calc(50px + 5vh);">
+                <div class="card-body">
+                    <h1 class="card-title">{{ user.username }}</h1>
+                    {% if editable %}
+                        <h3 class="card-subtitle mb-2 text-muted">{{ user.email }}</h3>
+                    {% endif %}
+                    {% if user.about %}
+                        <hr />
+                        <p>{{ user.about }}</p>
+                    {% endif %}
+                    {% if editable %}
+                        <hr />
+                        <a href="#" class="btn btn-info">Edit About</a>
+                        <a href="#" class="btn btn-danger">Change Password</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card mb-3" style="width: calc(65% - 2vw);">
+                <div class="card-body">
+                    <h1 class="card-title">Posts 
+                        {% if editable %}
+                            <span><a href="#" class="btn btn-sm btn-success float-right mt-3">New Post</a></span>
+                        {% endif %}
+                    </h1>
+                    {% for post in posts %}
+                        <hr class="mt-1 mb-3" />
+                        <a href="{{ url_for('View_Post', post_id = post.id) }}" class="post">
+                            <h4 class="mb-1">{{ post.title }}</h4>
+                        </a>
+                        <p style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ post.content }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
