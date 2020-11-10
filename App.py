@@ -59,6 +59,11 @@ class Post(db.Model):
     def __repr__(self):
         return f'Post({self.author}, {self.date_created}, {self.title})'
 
+# Handle 404 errors
+@app.errorhandler(404)
+def Page_Not_Found(e):
+    return redirect(url_for('Error', title = "Error: 404", msg = e))
+
 # Configure App routes
 # Render the matching HTML file
 @app.route('/')
