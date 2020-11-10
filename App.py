@@ -130,6 +130,19 @@ def User_Profile(username):
 def View_Post(post_id):
     pass
 
+@app.route('/recent')
+def Recent():
+    # Connect to DB
+    with engine.connect() as con:
+        try:
+            statement = text("SELECT p.id, p.title, p.content, p.date_created AS date, user.username AS author FROM post AS p INNER JOIN user ON (p.author_id = user.id) ORDER BY p.id DESC LIMIT 25")
+            posts = con.execute(statement).fetchall()
+        except:
+            # Change this into an error page of some sort
+            return redirect(url_for('Main'))
+
+    return render_template('recent.html', posts = posts)
+
 @app.route('/logout')
 def Logout():
     # Delete the user's session

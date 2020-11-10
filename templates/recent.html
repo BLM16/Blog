@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Recent Posts{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container">
+        {% for post in posts %}
+            <a href="{{ url_for('View_Post', post_id = post.id) }}" class="post">
+                <h4 class="mb-1">{{ post.title }}</h4>
+            </a>
+            <p class="text-muted" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ post.content }}</p>
+            <p><a href="{{ url_for('User_Profile', username = post.author) }}">{{ post.author }}</a> ~ {{ post.date }}</p>
+            <hr class="mt-1 mb-3" />
+        {% endfor %}
+    </div>
+{% endblock %}

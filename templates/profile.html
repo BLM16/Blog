@@ -3,7 +3,7 @@
 
 {% block content %}
 {{ super() }}
-    <div class="container" style="padding-top: 5vh;">
+    <div class="container">
         <div class="row">
             <div class="card sticky-top" style="width: 35%; margin-right: 2vw; height: fit-content; top: calc(50px + 5vh);">
                 <div class="card-body">
@@ -34,7 +34,7 @@
                         <a href="{{ url_for('View_Post', post_id = post.id) }}" class="post">
                             <h4 class="mb-1">{{ post.title }}</h4>
                         </a>
-                        <p style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ post.content }}</p>
+                        <p class="text-muted" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ post.content }}</p>
                     {% endfor %}
                 </div>
             </div>
