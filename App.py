@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, session
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text, select
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import date
 import re
 
@@ -83,20 +84,23 @@ def Own_Profile():
         return redirect(url_for('Login', message = "You must be logged in to view your profile."))
     else:
         with engine.connect() as con:
-            # Create and execute query
+            # Get user from DB
             try:
                 statement = text("SELECT * FROM user WHERE (id = :id)")
                 user = con.execute(statement, id = session['user_id']).fetchall()[0]
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Fetching user", msg = type(e), back = "Own_Profile"))
             except:
-                # Change this into an error page of some sort
-                return redirect(url_for('Main'))
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Own_Profile"))
 
+            # Get user posts from DB
             try:
                 statement = text("SELECT * FROM post WHERE (author_id = :id) ORDER BY id DESC")
                 posts = con.execute(statement, id = session['user_id']).fetchall()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Fetching user posts", msg = type(e), back = "Own_Profile"))
             except:
-                # Turn this into an error page of some sort
-                return redirect(url_for('Main'))
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Own_Profile"))
 
         return render_template("profile.html", user = user, posts = posts, editable = True)
 
@@ -105,21 +109,25 @@ def User_Profile(username):
     """Route for viewing other's profiles"""
 
     with engine.connect() as con:
-        # Create and execute query
+        # Get user from DB
         try:
             statement = text("SELECT * FROM user WHERE (username = :username)")
             user = con.execute(statement, username = username).fetchall()[0]
+        except SQLAlchemyError as e:
+            return redirect(url_for('Error', title = "Error: Fetching user", msg = type(e)))
         except:
-            # Change this into an error page of some sort
-            return redirect(url_for('Main'))
+            return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>"))
 
+        # Get user posts from DB
         try:
             statement = text("SELECT * FROM post WHERE (author_id = :id) ORDER BY id DESC")
             posts = con.execute(statement, id = user.id).fetchall()
+        except SQLAlchemyError as e:
+            return redirect(url_for('Error', title = "Error: Fetching user posts", msg = type(e)))
         except:
-            # Change this into an error page of some sort
-            return redirect(url_for('Main'))
+            return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>"))
 
+        # Redirect user to profile not profile/<username> if <username> is theirs (shows editing buttons and stuff)
         if 'user_id' in session:
             if user.id == session['user_id']:
                 return redirect(url_for('Own_Profile'))
@@ -137,9 +145,10 @@ def Recent():
         try:
             statement = text("SELECT p.id, p.title, p.content, p.date_created AS date, user.username AS author FROM post AS p INNER JOIN user ON (p.author_id = user.id) ORDER BY p.id DESC LIMIT 25")
             posts = con.execute(statement).fetchall()
+        except SQLAlchemyError as e:
+            return redirect(url_for('Error', title = "Error: Fetching recent posts", msg = type(e), back = "Recent"))
         except:
-            # Change this into an error page of some sort
-            return redirect(url_for('Main'))
+            return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
 
     return render_template('recent.html', posts = posts)
 
@@ -149,6 +158,14 @@ def Logout():
     session.pop('user_id')
 
     return redirect(url_for('Login'))
+
+@app.route('/error')
+def Error():
+    title = request.args.get('title')
+    msg = request.args.get('msg')
+    back = request.args.get('back')
+
+    return render_template("error.html", title = title, msg = msg, back = back)
 
 # Configure App routes with HTTP methods
 @app.route('/login', methods = ['POST'])
@@ -162,8 +179,13 @@ def Login_User():
         # Connect to DB
         with engine.connect() as con:
             # Check if user exists with given credentials
-            statement = text("SELECT user.id FROM user WHERE (email = :email AND password = :password)")
-            user_id = con.execute(statement, email = request.form['email'], password = request.form['password']).scalar()
+            try:
+                statement = text("SELECT user.id FROM user WHERE (email = :email AND password = :password)")
+                user_id = con.execute(statement, email = request.form['email'], password = request.form['password']).scalar()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Validating user", msg = type(e), back = "Login_User"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Login_User"))
 
             if user_id:
                 session['user_id'] = user_id # Create a user_id session to store login
@@ -188,21 +210,31 @@ def Register_User():
             return redirect(url_for('Register', message = "Username can only contain _, a-z, A-Z, 0-9 and spaces."))
         
         # Ensure a valid email
-        if not re.search(r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$', request.form['email']):
+        if not re.search(r'^[a-zA-Z0-9]+[\._]?[a-zA-Z0-9]+[@]\w+[.]\w+$', request.form['email']):
             return redirect(url_for('Register', message = "Invalid email"))
 
         # Connect to DB
         with engine.connect() as con:
             # Check if username is taken
-            statement = text("SELECT COUNT(1) FROM user WHERE (username = :username)")
-            result = con.execute(statement, username = request.form['username']).scalar()
+            try:
+                statement = text("SELECT COUNT(1) FROM user WHERE (username = :username)")
+                result = con.execute(statement, username = request.form['username']).scalar()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Validating user availability", msg = type(e), back = "Register_User"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Register_User"))
 
             if result > 0:
                 return redirect(url_for('Register', message = "Username is already taken"))
 
             # Check if email is taken
-            statement = text("SELECT COUNT(1) FROM user WHERE (email = :email)")
-            result = con.execute(statement, email = request.form['email']).scalar()
+            try:
+                statement = text("SELECT COUNT(1) FROM user WHERE (email = :email)")
+                result = con.execute(statement, email = request.form['email']).scalar()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Validating user availability", msg = type(e), back = "Register_User"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Register_User"))
 
             if result > 0:
                 return redirect(url_for('Register', message = "Email is already taken"))
@@ -213,8 +245,11 @@ def Register_User():
             db.session.commit()
 
             # Get the new user's ID to log them in
-            statement = text("SELECT id FROM user WHERE (username = :username)")
-            result = con.execute(statement, username = request.form['username']).scalar()
+            try:
+                statement = text("SELECT id FROM user WHERE (username = :username)")
+                result = con.execute(statement, username = request.form['username']).scalar()
+            except:
+                return redirect(url_for('Error', title = "Error: Login failed", msg = "REGISTRATION WAS SUCCESSFUL. Something went wrong loging you in. Please login."))
 
             # Log the new user in with a session
             session['user_id'] = result
