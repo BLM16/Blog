@@ -12,12 +12,44 @@
                         <h3 class="card-subtitle mb-2 text-muted">{{ user.email }}</h3>
                     {% endif %}
                     {% if user.about %}
-                        <hr />
-                        <p>{{ user.about }}</p>
+                        {% if to_edit == 'about' %}
+                            <hr />
+                            <form method="post">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <textarea class="form-control" id="about" name="about" spellcheck="true" maxlength="500">{{ user.about }}</textarea>
+                                    </div>
+                                </div>
+                                <div>
+                                    <hr />
+                                    <button type="submit" class="btn btn-success">Update</button>
+                                    <a href="{{ url_for('Own_Profile') }}" class="btn btn-danger">Cancel</a>
+                                </div>
+                            </form>
+                        {% else %}
+                            <hr />
+                            <p style="white-space: pre-wrap;">{{ user.about }}</p>
+                        {% endif %}
+                    {% else %}
+                        {% if to_edit == 'about' %}
+                            <hr />
+                            <form method="post">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <textarea class="form-control" id="about" name="about" spellcheck="true"></textarea>
+                                    </div>
+                                </div>
+                                <div>
+                                    <hr />
+                                    <button type="submit" class="btn btn-success">Update</button>
+                                    <a href="{{ url_for('Own_Profile') }}" class="btn btn-danger">Cancel</a>
+                                </div>
+                            </form>
+                        {% endif %}
                     {% endif %}
-                    {% if editable %}
+                    {% if editable and to_edit == None %}
                         <hr />
-                        <a href="#" class="btn btn-info">Edit About</a>
+                        <a href="{{ url_for('Own_Profile', edit = 'about') }}" class="btn btn-info">Edit About</a>
                         <a href="#" class="btn btn-danger">Change Password</a>
                     {% endif %}
                 </div>

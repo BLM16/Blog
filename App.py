@@ -25,7 +25,7 @@ class User(db.Model):
     username = db.Column(db.String(20), nullable = False, unique = True)
     email = db.Column(db.String(50), nullable = False, unique = True)
     password = db.Column(db.String, nullable = False)
-    #about = db.Colum(db.Text)
+    about = db.Column(db.Text)
 
     # References the Post class
     # Allows posts to access the User that created it
@@ -88,6 +88,7 @@ def Own_Profile():
     if not 'user_id' in session:
         return redirect(url_for('Login', message = "You must be logged in to view your profile."))
     else:
+        # Connect to DB
         with engine.connect() as con:
             # Get user from DB
             try:
@@ -107,7 +108,10 @@ def Own_Profile():
             except:
                 return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Own_Profile"))
 
-        return render_template("profile.html", user = user, posts = posts, editable = True)
+            # Check if the user is editing their about
+            to_edit = request.args.get('edit')
+
+        return render_template("profile.html", user = user, posts = posts, editable = True, to_edit = to_edit)
 
 @app.route('/profile/<username>')
 def User_Profile(username):
@@ -147,6 +151,7 @@ def View_Post(post_id):
 def Recent():
     # Connect to DB
     with engine.connect() as con:
+        # Select the 25 most recent posts
         try:
             statement = text("SELECT p.id, p.title, p.content, p.date_created AS date, user.username AS author FROM post AS p INNER JOIN user ON (p.author_id = user.id) ORDER BY p.id DESC LIMIT 25")
             posts = con.execute(statement).fetchall()
@@ -166,6 +171,7 @@ def Logout():
 
 @app.route('/error')
 def Error():
+    # Get the error parameters
     title = request.args.get('title')
     msg = request.args.get('msg')
     back = request.args.get('back')
@@ -192,6 +198,8 @@ def Login_User():
             except:
                 return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Login_User"))
 
+            # If user exists, log them in
+            # Else alert them to the wrong credentials
             if user_id:
                 session['user_id'] = user_id # Create a user_id session to store login
                 return redirect(url_for('Own_Profile')) # Redirect to user's profile
@@ -261,6 +269,33 @@ def Register_User():
 
             # Redirect to the new user's profile
             return redirect(url_for('Own_Profile'))
+
+@app.route('/profile', methods = ['POST'])
+def Update_About():
+    # If the user is updating their about
+    if request.form['about']:
+        # Limit length to 500 characters including whitespace
+        # Textarea in profile.html restricts too, this is verification
+        if len(str(request.form['about'])) - str(request.form['about']).count("\n") > 500:
+            return redirect(url_for('Error', title = "Error: About too long", msg = "Your about can not be more than 500 characters!", back = "Own_Profile"))
+
+        # Connect to DB
+        with engine.connect() as con:
+            # Update user's status in DB
+            try:
+                statement = text("UPDATE user SET about = :about WHERE id = :id")
+                result = con.execute(statement, about = request.form['about'], id = session['user_id']).rowcount
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Updating user about", msg = type(e), back = "Own_Profile"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Own_Profile"))
+
+            # If update was successful, return to profile
+            # Else throw error
+            if result == 1:
+                return redirect(url_for('Own_Profile'))
+            else:
+                return redirect(url_for('Error', title = "Error: Updating user about", msg = "<class 'blog.UnhandledError'>", back = "Own_Profile"))
 
 # Run the code in debug mode
 # Remove debug in production
