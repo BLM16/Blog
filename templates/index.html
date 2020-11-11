@@ -1,9 +1,86 @@
-{% extends "layout.html" %}
-{% block title %}Home{% endblock %}
+{% extends "bootstrap/base.html" %}
+{% block head %}
+    <title>Home - Blog</title>
+
+    <meta name="charset" content="UTF-8">
+    <meta name="description" content="A blog site made with Flask. View source at: https://github.com/BLM16/Blog.">
+    <meta name="keywords" content="blog">
+    <meta name="revisit-after" content="1">
+    <meta name="author" content="BLM16">
+    <meta name="application-name" content="Blog">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename = 'images/favicons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename = 'images/favicons/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename = 'images/favicons/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename = 'site.webmanifest') }}">
+
+    {% block styles %}
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
+        <link rel="stylesheet" href="{{ url_for('static', filename = 'css/styles.css') }}">
+    {% endblock %}
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('Main') }}">
+                <img src="{{ url_for('static', filename = 'images/favicons/favicon-32x32.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
+                Blog
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="nav-item">
+                        <a href="{{ url_for('Main') }}" class="nav-link home-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('Recent') }}" class="nav-link home-link">Recent</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav ml-auto">
+                    {% if session['user_id'] %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('Own_Profile') }}" class="nav-link home-link">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ url_for('Logout') }}" class="nav-link home-link">Logout</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link btn btn-sm btn-success" style="color: #fff;">New Post</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link home-link" href="{{ url_for('Login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link home-link" href="{{ url_for('Register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="top-spacemaker" style="padding-top: calc(50px + 5vh);"></div>
+{% endblock %}
 
 {% block content %}
-    {{ super() }}
-    <div class="container">
-        <h1>Test</h1>
+    <div class="splash" style="height: 100vh; width: 100vw; overflow: hidden; position: absolute; margin: 0; top: 0;">
+        <img src="{{ url_for('static', filename = 'images/splash.jpg') }}" style="position: absolute; margin: 0; height: auto; width: auto; min-height: 100vh; min-width: 100vw; top: 0;">
     </div>
+    <div style="position: absolute; margin: 0; height: 100vh; width: 100vw; top: 0; left: 0;">
+        <div class="text-center" style="margin-top: 30vh; color: white; text-shadow: 3px 4px black;">
+            <h1 style="font-size: 12em;">BLOG</h1>
+            <h4 style="font-size: 3em;">Express yourself freely.</h4>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
 {% endblock %}
