@@ -72,11 +72,19 @@ def Main():
 
 @app.route('/login')
 def Login():
+    # Log current user out (if any)
+    if 'user_id' in session:
+        session.pop('user_id')
+
     message = request.args.get('message')
     return render_template("login.html", message = message)
 
 @app.route('/register')
 def Register():
+    # Log current user out (if any)
+    if 'user_id' in session:
+        session.pop('user_id')
+
     message = request.args.get('message')
     return render_template("register.html", message = message)
 
@@ -117,6 +125,7 @@ def Own_Profile():
 def User_Profile(username):
     """Route for viewing other's profiles"""
 
+    # Connect to db
     with engine.connect() as con:
         # Get user from DB
         try:
@@ -143,9 +152,18 @@ def User_Profile(username):
 
     return render_template("profile.html", user = user, posts = posts, editable = False)
 
+@app.route('/post/new')
+def New_Post():
+    message = request.args.get('message')
+
+    if not 'user_id' in session:
+        return redirect(url_for('Login', message = "You must be logged in to make a post"))
+
+    return render_template("new.html", message = message)
+
 @app.route('/post/<int:post_id>')
 def View_Post(post_id):
-    pass
+    return post_id
 
 @app.route('/recent')
 def Recent():
@@ -253,9 +271,12 @@ def Register_User():
                 return redirect(url_for('Register', message = "Email is already taken"))
 
             # Create new user and add to the database
-            new_user = User(request.form['username'], request.form['email'], request.form['password'])
-            db.session.add(new_user)
-            db.session.commit()
+            try:
+                new_user = User(request.form['username'], request.form['email'], request.form['password'])
+                db.session.add(new_user)
+                db.session.commit()
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Register_User"))
 
             # Get the new user's ID to log them in
             try:
@@ -272,6 +293,8 @@ def Register_User():
 
 @app.route('/profile', methods = ['POST'])
 def Update_About():
+    """Updates user's about in the DB"""
+
     # If the user is updating their about
     if request.form['about']:
         # Limit length to 500 characters including whitespace
@@ -296,6 +319,42 @@ def Update_About():
                 return redirect(url_for('Own_Profile'))
             else:
                 return redirect(url_for('Error', title = "Error: Updating user about", msg = "<class 'blog.UnhandledError'>", back = "Own_Profile"))
+
+@app.route('/post/new', methods = ['POST'])
+def Post_New_Post():
+    """Posts new posts"""
+
+    # Check if the fields are filled out
+    if not (request.form['title'] and request.form['content']):
+        return redirect(url_for('New_Post', message = "Please fill out all the fields"))
+    else:
+        # Limit length including whitespace
+        # Inputs in new.html restrict too, this is verification
+        if len(str(request.form['title'])) > 100:
+            return redirect(url_for('New_Post', message = "Title can only be 100 characters long"))
+        if len(str(request.form['content'])) - str(request.form['content']).count("\n") > 5000:
+            return redirect(url_for('New_post', message = "Content can only be 5000 characters long"))
+
+        # Connect to DB
+        with engine.connect() as con:
+            # Create post
+            try:
+                post = Post(session['user_id'], request.form['title'], request.form['content'])
+                db.session.add(post)
+                db.session.commit()
+
+                # Get post id and redirect to the new post
+                try:
+                    statement = text("SELECT id FROM post WHERE (author_id = :author AND title = :title AND content = :content)")
+                    result = con.execute(statement, author = session['user_id'], title = request.form['title'], content = request.form['content']).scalar()
+
+                    return redirect(View_Post(result))
+                except SQLAlchemyError as e:
+                    return redirect(url_for('Error', title = "Error: Handling post", msg = type(e), back = "Own_Profile"))
+                except:
+                    return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "New_Post"))
+            except:
+                return redirect(url_for('Error', title = "Error: Creating post", msg = "<class 'blog.UnhandledError'>", back = "New_Post"))
 
 # Run the code in debug mode
 # Remove debug in production

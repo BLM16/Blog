@@ -2,10 +2,16 @@
 $(document).ready(function() {
 
     // Expand textarea with text
-    $('#about').on('keyup keypress', function() {
-      $(this).height(0);
-      $(this).height(this.scrollHeight);
+    $('.textarea-expand').on('keyup keypress', function() {
+        rows = $(this).attr('rows');
+
+        if (rows) {
+
+        } else {
+            $(this).height(0);
+            $(this).height(this.scrollHeight);
+        }
     });
-    $('#about').trigger('keypress')
+    $('.textarea-expand').trigger('keypress')
 
 });

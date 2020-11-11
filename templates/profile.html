@@ -17,7 +17,7 @@
                             <form method="post">
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <textarea class="form-control" id="about" name="about" spellcheck="true" maxlength="500">{{ user.about }}</textarea>
+                                        <textarea class="form-control textarea-expand" id="about" name="about" spellcheck="true" maxlength="500">{{ user.about }}</textarea>
                                     </div>
                                 </div>
                                 <div>
@@ -36,7 +36,7 @@
                             <form method="post">
                                 <div class="form-group">
                                     <div class="input-group">
-                                        <textarea class="form-control" id="about" name="about" spellcheck="true"></textarea>
+                                        <textarea class="form-control textarea-expand" id="about" name="about" spellcheck="true"></textarea>
                                     </div>
                                 </div>
                                 <div>
@@ -58,7 +58,7 @@
                 <div class="card-body">
                     <h1 class="card-title">Posts 
                         {% if editable %}
-                            <span><a href="#" class="btn btn-sm btn-success float-right mt-3">New Post</a></span>
+                            <span><a href="{{ url_for('New_Post') }}" class="btn btn-sm btn-success float-right mt-3">New Post</a></span>
                         {% endif %}
                     </h1>
                     {% for post in posts %}

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}New Post{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container">
+        <form method="POST">
+            {% if message %}
+                <div class="alert alert-danger alert-dismissable">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>{{ message }}</span>
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                </div>
+            {% endif %}
+            <div class="form-group">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fas fa-tag" style="padding-top: 2px;"></i></span>
+                    </div>
+                    <input type="text" placeholder="Give your post a title" class="form-control" id="title" name="title" maxlength="100" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fas fa-paragraph"></i></span>
+                    </div>
+                    <textarea placeholder="Give your post some content" class="form-control textarea-expand" id="content" name="content" rows="18" spellcheck="true" maxlength="5000" required></textarea>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-success">Post</button>
+                <a class="btn btn-danger" href="{{ url_for('Own_Profile') }}">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
