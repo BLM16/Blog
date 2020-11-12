@@ -62,16 +62,22 @@ class Post(db.Model):
 # Handle 404 errors
 @app.errorhandler(404)
 def Page_Not_Found(e):
+    """Redirects the 404 errors to the error template"""
+
     return redirect(url_for('Error', title = "Error: 404", msg = e))
 
 # Configure App routes
 # Render the matching HTML file
 @app.route('/')
 def Main():
+    """Renders the landing page"""
+
     return render_template("index.html")
 
 @app.route('/login')
 def Login():
+    """Renders the login form"""
+
     # Log current user out (if any)
     if 'user_id' in session:
         session.pop('user_id')
@@ -81,6 +87,8 @@ def Login():
 
 @app.route('/register')
 def Register():
+    """Renders the register form"""
+
     # Log current user out (if any)
     if 'user_id' in session:
         session.pop('user_id')
@@ -154,6 +162,8 @@ def User_Profile(username):
 
 @app.route('/post/new')
 def New_Post():
+    """Renders the new post form"""
+
     message = request.args.get('message')
 
     if not 'user_id' in session:
@@ -163,6 +173,8 @@ def New_Post():
 
 @app.route('/post/<int:post_id>')
 def View_Post(post_id):
+    """Renders the post by id to the view form"""
+
     # Connect to DB
     with engine.connect() as con:
         # Select the post data
@@ -183,6 +195,8 @@ def View_Post(post_id):
 
 @app.route('/recent')
 def Recent():
+    """Renders the most recent 25 posts to the recent form"""
+
     # Connect to DB
     with engine.connect() as con:
         # Select the 25 most recent posts
@@ -198,10 +212,14 @@ def Recent():
 
 @app.route('/post/<int:post_id>/del')
 def Delete_Post_Form(post_id):
+    """Renders the delete post form for a post by id"""
+
     return render_template("delete.html")
 
 @app.route('/password')
 def Change_Password_Form():
+    """Renders the change password form for the current user"""
+
     # Send the user to login if they aren't logged in
     if not 'user_id' in session:
         return redirect(url_for('Login', message = "You must be logged in to change your password"))
@@ -212,10 +230,14 @@ def Change_Password_Form():
 
 @app.route('/search')
 def Search_Form():
+    """Render the search form"""
+
     return render_template("search.html")
 
 @app.route('/logout')
 def Logout():
+    """Log the current user out"""
+
     # Delete the user's session
     session.pop('user_id')
 
@@ -223,6 +245,8 @@ def Logout():
 
 @app.route('/error')
 def Error():
+    """Renders the error screen with query string parameters"""
+
     # Get the error parameters
     title = request.args.get('title')
     msg = request.args.get('msg')
@@ -392,6 +416,8 @@ def Post_New_Post():
 
 @app.route('/post/<int:post_id>', methods = ['POST'])
 def Edit_Post(post_id):
+    """Updates a post by id in the DB"""
+
     # Verify that the fields have content
     if not (request.form['title'] and request.form['content']):
         return redirect(url_for('View_Post', post_id = post_id))
@@ -513,11 +539,15 @@ def Change_Password():
 
 @app.route('/search', methods = ['POST'])
 def Search():
+    """Searches the DB for matching users and posts based on filters and renders them to the search form"""
+
+    # Get the filters and search
     search = request.form.get('search')
     filter_all = request.form.get('all')
     filter_users = request.form.get('users')
     filter_posts = request.form.get('posts')
 
+    # Verify valid search
     if len(search) < 3:
         return redirect(url_for("Search_Form"))
 
@@ -553,7 +583,6 @@ def Search():
             return render_template("search.html", users = users, posts = None)
         elif filter_posts == 'true':
             # Get all similar posts
-            # Get all posts where the author is similar
             try:
                 posts = Post.query.filter(Post.title.like(search)).all()
             except SQLAlchemyError as e:
