@@ -163,7 +163,23 @@ def New_Post():
 
 @app.route('/post/<int:post_id>')
 def View_Post(post_id):
-    return post_id
+    # Connect to DB
+    with engine.connect() as con:
+        # Select the post data
+        try:
+            statement = text("SELECT p.id AS post_id, p.title, p.content, p.author_id, p.date_created AS date, user.username AS author FROM post AS p INNER JOIN user ON (p.author_id = user.id) WHERE (p.id = :id)")
+            post = con.execute(statement, id = post_id).fetchall()[0]
+        except SQLAlchemyError as e:
+            return redirect(url_for('Error', title = "Error: Fetching post", msg = type(e), back = "Recent"))
+        except:
+            return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
+
+        if session['user_id'] == post.author_id:
+            edit = request.args.get('edit')
+        else:
+            edit = 'false'
+
+    return render_template('post.html', post = post, edit = edit)
 
 @app.route('/recent')
 def Recent():
@@ -179,6 +195,10 @@ def Recent():
             return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
 
     return render_template('recent.html', posts = posts)
+
+@app.route('/post/<int:post_id>/del')
+def Delete_Post_Form(post_id):
+    return render_template("delete.html")
 
 @app.route('/logout')
 def Logout():
@@ -348,13 +368,92 @@ def Post_New_Post():
                     statement = text("SELECT id FROM post WHERE (author_id = :author AND title = :title AND content = :content)")
                     result = con.execute(statement, author = session['user_id'], title = request.form['title'], content = request.form['content']).scalar()
 
-                    return redirect(View_Post(result))
+                    return redirect(url_for('View_Post', post_id = result))
                 except SQLAlchemyError as e:
                     return redirect(url_for('Error', title = "Error: Handling post", msg = type(e), back = "Own_Profile"))
                 except:
                     return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "New_Post"))
             except:
                 return redirect(url_for('Error', title = "Error: Creating post", msg = "<class 'blog.UnhandledError'>", back = "New_Post"))
+
+@app.route('/post/<int:post_id>', methods = ['POST'])
+def Edit_Post(post_id):
+    # Verify that the fields have content
+    if not (request.form['title'] and request.form['content']):
+        return redirect(url_for('View_Post', post_id = post_id))
+
+    # Limit length including whitespace
+    # Inputs in new.html restrict too, this is verification
+    if len(str(request.form['title'])) > 100:
+        return redirect(url_for('View_Post', post_id = post_id, message = "Title can only be 100 characters long"))
+    if len(str(request.form['content'])) - str(request.form['content']).count("\n") > 5000:
+        return redirect(url_for('View_Post', post_id = post_id, message = "Content can only be 5000 characters long"))
+
+    # Connect to DB
+    with engine.connect() as con:
+        # Select the post's author's id
+        try:
+            statement = text("SELECT author_id FROM post WHERE (id = :id)")
+            author_id = con.execute(statement, id = post_id).scalar()
+        except SQLAlchemyError as e:
+            return redirect(url_for('Error', title = "Error: Editing post", msg = type(e), back = "Recent"))
+        except:
+            return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
+
+        # Verify that the editor is the author
+        if session['user_id'] == author_id:
+            # Update the post
+            try:
+                statement = text("UPDATE post SET title = :title, content = :content, date_created = :date WHERE id = :id")
+                result = con.execute(statement, title = request.form['title'], content = request.form['content'], date = str(date.today()), id = post_id).rowcount
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Updating post", msg = type(e), back = "Recent"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
+
+            # If there was an error updating, show that
+            if result < 1:
+                return  redirect(url_for('Error', title = "Error: Updating post", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
+        else:
+            return  redirect(url_for('Error', title = "Error: Can't edit other's posts", msg = "<class 'blog.PostSecurityError'>", back = "Recent"))
+
+    return redirect(url_for("View_Post", post_id = post_id))
+
+@app.route('/post/<int:post_id>/del', methods = ['POST'])
+def Delete_Post(post_id):
+    """Deletes a post by id if user is the post's author"""
+
+    if str(request.form['confirm']).lower() == 'confirm':
+        # Connect to DB
+        with engine.connect() as con:
+            try:
+                statement = text("SELECT author_id from post WHERE (id = :id)")
+                author_id = con.execute(statement, id = post_id).scalar()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Deleting post", msg = type(e), back = "Recent"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
+
+            if not (session['user_id'] == author_id):
+                return redirect(url_for('Error', title = "Error: Can't delete others' posts", msg = "You can't delete others' posts!!!", back = "Recent"))
+
+            # Delete post
+            try:
+                statement = text("DELETE FROM post WHERE id = :id")
+                result = con.execute(statement, id = post_id).rowcount
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Deleting post", msg = type(e), back = "Recent"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
+
+            # If update was successful, return to profile
+            # Else throw error
+            if result == 1:
+                return redirect(url_for('Own_Profile'))
+            else:
+                return redirect(url_for('Error', title = "Error: Deleting post", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
+    else:
+        return redirect(url_for('Delete_Post', post_id = post_id))
 
 # Run the code in debug mode
 # Remove debug in production

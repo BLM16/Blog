@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}Delete{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container">
+        <div class="card mx-auto mb-3" style="width: 60%;">
+            <div class="card-body">
+                <form method="post">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-trash"></i></span>
+                            </div>
+                            <input class="form-control" type="text" id="confirm" name="confirm" placeholder="Type 'confirm'" required>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-danger fas fa-trash"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

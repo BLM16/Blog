@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container">
+        <div class="card mx-auto mb-3" style="width: 60%;">
+            <div class="card-body">
+                {% if edit == 'true' %}
+                    <form method="post">
+                        {% if message %}
+                            <div class="alert alert-danger alert-dismissable">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>{{ message }}</span>
+                                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-tag" style="padding-top: 2px;"></i></span>
+                                </div>
+                                <input value="{{ post.title }}" class="form-control" type="text" id="title", name="title", spellcheck="true", maxlength="100" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-paragraph"></i></span>
+                                </div>
+                                <textarea class="form-control textarea-expand" id="content" name="content" spellcheck="true" maxlength="5000" required>{{ post.content }}</textarea>
+                            </div>
+                        </div>
+                        <hr class="mt-3 mb-1" />
+                        <div style="display: flex;">
+                            <p><a href="{{ url_for('User_Profile', username = post.author) }}">{{ post.author }}</a> ~ {{ post.date }}</p>
+                            {% if session['user_id'] == post.author_id %}
+                                {% if edit == 'true' %}
+                                    <div class="action-group ml-auto">
+                                        <button type="submit" class="btn btn-success">Confirm</button>
+                                        <a href="{{ url_for('View_Post', post_id = post.post_id) }}" class="btn btn-danger">Cancel</a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </form>
+                {% else %}
+                    <h1 class="card-title">{{ post.title }}</h1>
+                    <hr class="mb-3" />
+                    <p style="white-space: pre-wrap;">{{ post.content }}</p>
+                    <hr class="mt-3 mb-1" />
+                    <div style="display: flex;">
+                        <p><a href="{{ url_for('User_Profile', username = post.author) }}">{{ post.author }}</a> ~ {{ post.date }}</p>
+                        {% if session['user_id'] == post.author_id %}
+                            <div class="action-group ml-auto">
+                                <a href="?edit=true" class="btn btn-info fas fa-pencil-alt"></a>
+                                <a href="{{ url_for('Delete_Post_Form', post_id = post.post_id) }}" class="btn btn-danger fas fa-trash"></a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
