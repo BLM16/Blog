@@ -15,7 +15,7 @@ Date created: 07-10-2020 | Last updated: 12-11-2020
 To install the requirements, run the following command in a terminal (Windows):
 
 ```bat
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 To set up the database with the required tables, run the following commands in a terminal (Windows) in the project's directory. **Note: python might be `py` or some other command depending on your version(s) installed.**
