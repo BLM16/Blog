@@ -50,7 +50,7 @@
                     {% if editable and to_edit == None %}
                         <hr />
                         <a href="{{ url_for('Own_Profile', edit = 'about') }}" class="btn btn-info">Edit About</a>
-                        <a href="#" class="btn btn-danger">Change Password</a>
+                        <a href="{{ url_for('Change_Password_Form') }}" class="btn btn-danger">Change Password</a>
                     {% endif %}
                 </div>
             </div>

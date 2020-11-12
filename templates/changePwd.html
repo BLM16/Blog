@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block title %}Change Password{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container">
+        <div class="card mx-auto mb-3" style="width: 60%;">
+            <div class="card-body">
+                <form method="post">
+                    {% if message %}
+                        <div class="alert alert-danger alert-dismissable">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>{{ message }}</span>
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            </div>
+                            <input type="password" placeholder="●●●●●●●●●●●● (Current)" class="form-control" id="password" name="passwordOld" required>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            </div>
+                            <input type="password" placeholder="●●●●●●●●●●●● (New)" class="form-control" id="passwordConf" name="passwordNew" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            </div>
+                            <input type="password" placeholder="●●●●●●●●●●●● (Confirm)" class="form-control" id="passwordConf" name="passwordConf" required>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-danger">Change</button>
+                        <a class="btn text-primary" href="{{ url_for('Own_Profile') }}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -200,6 +200,16 @@ def Recent():
 def Delete_Post_Form(post_id):
     return render_template("delete.html")
 
+@app.route('/password')
+def Change_Password_Form():
+    # Send the user to login if they aren't logged in
+    if not 'user_id' in session:
+        return redirect(url_for('Login', message = "You must be logged in to change your password"))
+
+    message = request.args.get('message')
+
+    return render_template("changePwd.html", message = message)
+
 @app.route('/logout')
 def Logout():
     # Delete the user's session
@@ -454,6 +464,48 @@ def Delete_Post(post_id):
                 return redirect(url_for('Error', title = "Error: Deleting post", msg = "<class 'blog.UnhandledError'>", back = "Recent"))
     else:
         return redirect(url_for('Delete_Post', post_id = post_id))
+
+@app.route('/password', methods = ['POST'])
+def Change_Password():
+    """Changes the current user's password"""
+
+    # Verify the fields have content
+    if not (request.form['passwordOld'] and request.form['passwordNew'] and request.form['passwordConf']):
+        return redirect(url_for('Change_Password_Form', message = "All the fields must be filled in"))
+
+    # Ensure passwords match
+    if request.form['passwordNew'] != request.form['passwordConf']:
+        return redirect(url_for('Change_Password_Form', message = "Passwords do not match"))
+
+    # Connect to DB
+    with engine.connect() as con:
+        # Check if password matches passwordOld
+        try:
+            statement = text("SELECT password FROM user WHERE id = :id")
+            passwordOld = con.execute(statement, id = session['user_id']).scalar()
+        except SQLAlchemyError as e:
+            return redirect(url_for('Error', title = "Error: Deleting password", msg = type(e), back = "Change_Password_Form"))
+        except:
+            return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Change_Password_Form"))
+
+        if passwordOld == request.form['passwordOld']:
+            # Change password
+            try:
+                statement = text("UPDATE user SET password = :password WHERE id = :id")
+                result = con.execute(statement, password = request.form['passwordNew'], id = session['user_id']).rowcount
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Deleting password", msg = type(e), back = "Change_Password_Form"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Change_Password_Form"))
+        else:
+            return redirect(url_for('Change_Password_Form', message = "Incorrect old password"))
+
+    # If update was successful, return to profile
+    # Else throw error
+    if result == 1:
+        return redirect(url_for('Own_Profile'))
+    else:
+        return redirect(url_for('Error', title = "Error: Changing password", msg = "<class 'blog.UnhandledError'>", back = "Change_Password_Form"))
 
 # Run the code in debug mode
 # Remove debug in production
