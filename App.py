@@ -210,6 +210,10 @@ def Change_Password_Form():
 
     return render_template("changePwd.html", message = message)
 
+@app.route('/search')
+def Search_Form():
+    return render_template("search.html")
+
 @app.route('/logout')
 def Logout():
     # Delete the user's session
@@ -506,6 +510,58 @@ def Change_Password():
         return redirect(url_for('Own_Profile'))
     else:
         return redirect(url_for('Error', title = "Error: Changing password", msg = "<class 'blog.UnhandledError'>", back = "Change_Password_Form"))
+
+@app.route('/search', methods = ['POST'])
+def Search():
+    search = request.form.get('search')
+    filter_all = request.form.get('all')
+    filter_users = request.form.get('users')
+    filter_posts = request.form.get('posts')
+
+    if len(search) < 3:
+        return redirect(url_for("Search_Form"))
+
+    # Connect to DB
+    with engine.connect() as con:
+        if filter_all == 'true' or (filter_users == 'true' and filter_posts == 'true'):
+            # Get all similar users
+            try:
+                users = User.query.filter(User.username.like(search)).all()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Performing search", msg = type(e), back = "Search_Form"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Search_Form"))
+
+            # Get all similar posts
+            try:
+                posts = Post.query.filter(Post.title.like(search)).all()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Performing search", msg = type(e), back = "Search_Form"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Search_Form"))
+
+            return render_template("search.html", users = users, posts = posts)
+        elif filter_users == 'true':
+            # Get all similar users
+            try:
+                users = User.query.filter(User.username.like(search)).all()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Performing search", msg = type(e), back = "Search_Form"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Search_Form"))
+
+            return render_template("search.html", users = users, posts = None)
+        elif filter_posts == 'true':
+            # Get all similar posts
+            # Get all posts where the author is similar
+            try:
+                posts = Post.query.filter(Post.title.like(search)).all()
+            except SQLAlchemyError as e:
+                return redirect(url_for('Error', title = "Error: Performing search", msg = type(e), back = "Search_Form"))
+            except:
+                return redirect(url_for('Error', title = "Error", msg = "<class 'blog.UnhandledError'>", back = "Search_Form"))
+
+            return render_template("search.html", users = None, posts = posts)
 
 # Run the code in debug mode
 # Remove debug in production

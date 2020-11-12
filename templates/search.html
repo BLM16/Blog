@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block title %}Recent Posts{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container">
+        <form method="post">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                </div>
+                <input type="text" class="form-control" placeholder="Enter your search" id="search" name="search">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </div>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="cbAll" value="true" name="all" checked>
+                <label class="form-check-label" for="cbAll">All</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="cbUsers" value="true" name="users">
+                <label class="form-check-label" for="cbUsers">Users</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="cbPosts" value="true" name="posts">
+                <label class="form-check-label" for="cbPosts">Posts</label>
+            </div>
+        </form>
+        {% if users %}
+            {% for user in users %}
+                <a href="{{ url_for('User_Profile', username = user.username) }}">
+                    <h4 class="mb-1">{{ user.username }}</h4>
+                </a>
+                <p class="text-muted" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ user.about }}</p>
+                <hr class="mt-1 mb-3" />
+            {% endfor %}
+        {% endif %}
+        {% if posts %}
+            {% for post in posts %}
+                <a href="{{ url_for('View_Post', post_id = post.id) }}" class="post">
+                    <h4 class="mb-1">{{ post.title }}</h4>
+                </a>
+                <p class="text-muted" style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ post.content }}</p>
+                <p><a href="{{ url_for('User_Profile', username = post.author.username) }}">{{ post.author.username }}</a> ~ {{ post.date_created }}</p>
+                <hr class="mt-1 mb-3" />
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endblock %}
